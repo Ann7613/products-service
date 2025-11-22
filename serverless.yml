@@ -1,0 +1,112 @@
+org: ${env:ORG_NAME}
+service: china-wok-products
+
+plugins:
+  - serverless-dotenv-plugin
+
+provider:
+  name: aws
+  runtime: python3.13
+  memorySize: 256
+  stage: dev
+  region: us-east-1
+  timeout: 10
+  iam:
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:ROLE_NAME}
+  environment:
+    PRODUCTS_TABLE: ${env:PRODUCTS_TABLE}
+
+functions:
+  # CRUD de Productos
+  
+  CreateProduct:
+    handler: handlers/create_product.lambda_handler
+    description: Crear un nuevo producto en el menú
+    events:
+      - http:
+          path: /products
+          method: post
+          cors: true
+
+  ListProducts:
+    handler: handlers/list_products.lambda_handler
+    description: Listar todos los productos (con filtros opcionales)
+    events:
+      - http:
+          path: /products
+          method: get
+          cors: true
+
+  GetProduct:
+    handler: handlers/get_product.lambda_handler
+    description: Obtener un producto por ID
+    events:
+      - http:
+          path: /products/{product_id}
+          method: get
+          cors: true
+
+  UpdateProduct:
+    handler: handlers/update_product.lambda_handler
+    description: Actualizar un producto existente
+    events:
+      - http:
+          path: /products/{product_id}
+          method: put
+          cors: true
+
+  DeleteProduct:
+    handler: handlers/delete_product.lambda_handler
+    description: Eliminar (desactivar) un producto
+    events:
+      - http:
+          path: /products/{product_id}
+          method: delete
+          cors: true
+
+  # Gestión de Categorías
+  
+  ListCategories:
+    handler: handlers/list_categories.lambda_handler
+    description: Listar todas las categorías
+    events:
+      - http:
+          path: /categories
+          method: get
+          cors: true
+
+  GetProductsByCategory:
+    handler: handlers/get_by_category.lambda_handler
+    description: Obtener productos por categoría
+    events:
+      - http:
+          path: /categories/{category}/products
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    ProductsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:PRODUCTS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: product_id
+            AttributeType: S
+          - AttributeName: category
+            AttributeType: S
+          - AttributeName: name
+            AttributeType: S
+        KeySchema:
+          - AttributeName: product_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: CategoryIndex
+            KeySchema:
+              - AttributeName: category
+                KeyType: HASH
+              - AttributeName: name
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL

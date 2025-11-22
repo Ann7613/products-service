@@ -1,0 +1,12 @@
+{
+  "name": "china-wok-products",
+  "version": "1.0.0",
+  "description": "Microservicio de gestión de productos - China Wok",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "remove": "serverless remove"
+  },
+  "devDependencies": {
+    "serverless-dotenv-plugin": "^6.0.0"
+  }
+}
